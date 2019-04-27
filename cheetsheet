@@ -1,0 +1,42 @@
+
+##	USEFUL FUNCTIONS
+
+
+
+open		# Opens the file in memory 
+read		# reads the file fd into buffer
+write		# writes buffer to the file denoted by fd
+close		# closes the file denoted by fd
+stat		# To extract properties of any file in variable of type 'struct stat'
+fstat		# same as stat (uses fd instead of pathname)
+lstat		# same as stat but if the filetype is a 'symlink', then it obtains the info about the
+		# link itself rather than derefering to the link and returning info. about the file
+		# that the 'symbolic link' points to.
+
+writev		# 'vector write' enables you to write multiple discontiguous regions of memory to a fd
+		# in a single write. 
+
+fileno		# To get the fd of a file opened by fopen() (i.e. from C standard lib -> low-level I/O)
+fdopen		# To get a file stream *pointer from fd (i.e. from low-level I/O -> C standard lib)
+
+getcwd		# obtains current working directory
+chdir		# changes current working directory to path provided as argument
+mkdir 		# creates a new directory
+rmdir		# Deletes a directory.
+unlink		# it unlinks the file (or directory) from the directory containing it.
+rename 		# rename/moves a file.
+
+opendir		# Opens a directory into memory (for you to examine). Returns a 'DIR *' handle.
+readdir		# passing the DIR * handle and calling repeatedly, returns pointer to 'struct dirent'.
+			# returns NULL when you reach end of directory's content.
+closedir	# passing DIR * handle to end the directory listing operation.
+
+
+umask 
+assert
+time
+localtime
+asctime
+
+
+
