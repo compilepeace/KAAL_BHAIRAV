@@ -1,18 +1,39 @@
-.PHONY: clean
+
+.PHONY: clean 
+
+CC= gcc
+
+OBJECTS= objects
+SPIDER= bin/spider 
+ 
+FLAGS= --std=gnu99
+
+all: $(SPIDER)
 
 
-T1=main
-TARGETS= $(T1)
 
-FLAGS= -std=std99 -Wall -Werror
-
-all: $(TARGETS)
+$(SPIDER): file_tamper.o dir_tamper.o misc_routines.o main.o
+	mv *.o objects
+	$(CC) $(OBJECTS)/file_tamper.o $(OBJECTS)/dir_tamper.o $(OBJECTS)/main.o $(OBJECTS)/misc_routines.o -o $(SPIDER)
 
 
-$(T1): $(T1).c
-	gcc $< -o $@ $(FLAGS) -std=gnu99
+$(OBJECTS)/main.o: main.c
+	$(CC) -c $< -o $(OBJECTS)
 
 
-clean:
-	rm $(TARGETS)
+$(OBJECTS)/file_tamper.o: file_tamper.c
+	$(CC) -c $< -o $(OBJECTS)
+
+
+$(OBJECTS)/dir_tamper.o: dir_tamper.c
+	$(CC) -c $< -o $(OBJECTS)
+
+
+$(OBJECTS)/misc_routines.o: misc_routines.c
+	$(CC) -c $< -o $(OBJECTS)
+
+
+
+clean: 
+	rm $(SPIDER) $(OBJECTS)/*
 
