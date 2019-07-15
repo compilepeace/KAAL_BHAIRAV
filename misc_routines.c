@@ -11,11 +11,17 @@
 #include "color.h"
 
 
+
 // Returns a joined string (path + name) 
 char *GetAbsPath(char *path, char *name)
 {
 
-	char *pathname = (char *)calloc(1000, 1);
+	// Plus 2 because of a '\0' (string terminator) and a '/' (placed in between both paths)
+	int pathname_length = strlen(path) + strlen(name) + 2;
+
+
+	// Allocate and clear out memory of 'pathname_length' no. of blocks, each block is 1 byte in size
+	char *pathname = (char *)calloc( pathname_length, 1);
 	if (pathname == NULL)
 	{
 		fprintf(stderr, RED"[-]"RESET" mics_routines.c : GetAbsPath -> calloc\n");

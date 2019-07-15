@@ -38,28 +38,109 @@ struct stat {
 
 
 
-// A wrapper function that sets up absolute pathname for directory entry's and calls getfiletype() on
-// that directory entry
-const char *GetFileType(char *user_provided_location, char *dir_entry)
+// Initially marks as empty list
+FileList *head = NULL; 
+FileList *current_node = NULL;
+
+
+
+// Create a new node to store Absolute path for filename
+void FileCreateNode(char *filepath)
+{
+
+	// Check for the filepath length
+	if (strlen(filepath) > 499)
+	{
+		fprintf(stderr, RED"[-]"RESET"In %s : %s -> %s too long to be stored into FileList\n", __FILE__, __FUNCTION__, filepath);
+		exit(0x51);
+	}
+
+	
+	AddNode(current_node, filepath);
+}
+
+
+
+// Checks if the node is the initial or intermediate node and sets the current_node pointer accordingly.
+void AddNode(FileList *current, char *filepath)
+{
+
+
+	// Initialize the FilesList if its currently empty 
+    if (head == NULL)
+    {
+		head = AllocMemory(filepath, NULL);
+		current_node = head;
+	}
+
+	
+	// Add to the next of current node and point current_node to the new node added
+	else if (head != NULL)
+	{
+		current_node->next = AllocMemory(filepath, NULL);
+		current_node = current_node->next;
+	}
+
+}
+
+
+
+// Creates and initializes a new node in heap segment. Returns the address of new malloc'd memory.
+FileList *AllocMemory(char *filepath, FileList *next_node_address)
+{
+
+	FileList *node = (FileList *) malloc( sizeof(FileList) );
+   
+	if (node == NULL)
+	{
+    	// Malloc failed. Exiting
+		fprintf(stderr, RED"[-] %s : %s while malloc(). Exiting ... \n\n", __FILE__, __FUNCTION__);
+		exit(0x50);
+	}
+
+		
+		// Clear out the malloced memory and store the (filepath) and (address of next node) in it
+		memmove(node, "0", sizeof(FileList));
+		
+		node->name = (char *) calloc(strlen(filepath), 1);	
+		strncpy(node->name, filepath, strlen(filepath));
+
+		node->next = next_node_address;
+
+
+	return node;
+}
+
+
+
+// Prints the linked list nodes
+void PrintLinkedList(FileList *start)
+{
+	
+	FileList *ptr = start;	
+	
+
+	fprintf(stdout, "\n\n");
+
+	do
+	{
+		fflush(stdout);
+		fprintf(stdout, "| "YELLOW"%s"RESET" : "RED"%p"RESET" | -> ", ptr->name, ptr->next);
+		ptr = ptr->next;
+	
+	} while (ptr != NULL);
+
+}
+
+
+
+// Function returns filetype of a file reffered by its absolute pathname
+const char *GetFileType(char *absolute_path)
 {
 
         // To get proper results (i.e. filetype from getfiletype's S_ISBLK() etc.) use the absolute
         // pathname for file (i.e. from / directory) to identify correct file type, otherwise we 
         // won't get proper filetype.       
-        char absolute_path[300];
-        int location_len = strlen(user_provided_location);
-
-        // Zero out absolute path and store user provided location
-        memmove(absolute_path, "0", sizeof(absolute_path));
-        strncpy(absolute_path, user_provided_location, location_len);
-
-        // Append a '/' at the end of location provided by user
-        if (absolute_path[location_len - 1] != '/')
-            strncat(absolute_path, "/", 1);
-
-        // Append directory entry
-        strncat(absolute_path, dir_entry, strlen(dir_entry));
-
 
 
 		struct stat s;

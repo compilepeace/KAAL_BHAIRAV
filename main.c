@@ -48,9 +48,9 @@ int main(int argc, char *argv[])
 	uid_t euid = geteuid();
 	
 	if (uid == 0 || euid == 0)
-		fprintf(stdout, GREEN"[+] "RESET"Running as root : %d : %d ...\n", uid, euid);
+		fprintf(stdout, GREEN"\n[+] "RESET"Running as root : %d : %d ...\n", uid, euid);
 	else
-		fprintf(stdout, RED"[-] "RESET"Running as %s ...\n", getenv("USERNAME"));
+		fprintf(stdout, RED"\n[-] "RESET"Running as %s ...\n", getenv("USERNAME"));
 
 
 
@@ -60,7 +60,13 @@ int main(int argc, char *argv[])
 	// Start reccusing directories
 	DirEntriesParse(path);
 
+	PrintLinkedList(head);
 
+	fprintf(stdout, "\n\n\n");
+	fprintf(stdout, BOLDGREEN"[+]"RESET" Parsed %ld directories\n", dir_count);
+	fprintf(stdout, BOLDGREEN"[+]"RESET" Parsed %ld files\n", file_count);
+
+	
 
 return 0x00;
 }

