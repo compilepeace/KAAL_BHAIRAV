@@ -44,7 +44,8 @@ FileList *current_node = NULL;
 
 
 
-// Create a new node to store Absolute path for filename
+// A wrapper function to create a new node to store Absolute path for filename. This does so by 
+// leveraging a chain of functionality : FileCreateNode() -> AddNode() -> AllocMemory()
 void FileCreateNode(char *filepath)
 {
 
@@ -55,14 +56,15 @@ void FileCreateNode(char *filepath)
 		exit(0x51);
 	}
 
-	
+	// 	
 	AddNode(current_node, filepath);
 }
 
 
 
-// Checks if the node is the initial or intermediate node and sets the current_node pointer accordingly.
-void AddNode(FileList *current, char *filepath)
+// Checks if the node is the initial or intermediate node setting the current_node pointer 
+// accordingly and calling AllocMemory()
+static void AddNode(FileList *current, char *filepath)
 {
 
 
@@ -85,8 +87,9 @@ void AddNode(FileList *current, char *filepath)
 
 
 
-// Creates and initializes a new node in heap segment. Returns the address of new malloc'd memory.
-FileList *AllocMemory(char *filepath, FileList *next_node_address)
+// Allocates space on heap segment for FileNode and is responsible for initializing the structure 
+// members of FileNode. Returns the address of new malloc'd memory.
+static FileList *AllocMemory(char *filepath, FileList *next_node_address)
 {
 
 	FileList *node = (FileList *) malloc( sizeof(FileList) );

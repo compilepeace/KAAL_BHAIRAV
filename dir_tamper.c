@@ -21,8 +21,8 @@
 
 
 
-long int dir_count = 0;
-long int file_count = 0;
+unsigned long int dir_count = 0;
+unsigned long int file_count = 0;
 
 
 void DirEntriesParse(char *location)

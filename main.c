@@ -57,14 +57,18 @@ int main(int argc, char *argv[])
     char *path = argv[1];         // Replace it with ROOTNODE when done developing
 
 
-	// Start reccusing directories
+	// Start reccusing directories and get a linkedlist pointed to by *head, storing the filenames and
+	// file attributes under the path provided by user (as a command line arg)
 	DirEntriesParse(path);
 
-	PrintLinkedList(head);
+//	PrintLinkedList(head);
+
+	Destroy(head);
 
 	fprintf(stdout, "\n\n\n");
 	fprintf(stdout, BOLDGREEN"[+]"RESET" Parsed %ld directories\n", dir_count);
 	fprintf(stdout, BOLDGREEN"[+]"RESET" Parsed %ld files\n", file_count);
+	fprintf(stdout, BOLDGREEN"[+]"RESET" Parsed %ld ELFs\n", elf_count);
 
 	
 
