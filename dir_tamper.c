@@ -57,7 +57,8 @@ void DirEntriesParse(char *location)
 
 			// Create and add the filename node to 'Files' linked list
 			// Actual file tampering starts from here
-			FileCreateNode(filename);
+			if ( strncmp(filename, "/proc/", 6) != 0 && strncmp(filename, "/sys/kernel/debug/", 18) !=0)
+				FileCreateNode(filename);
 		}
 
 

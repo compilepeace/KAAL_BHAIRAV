@@ -103,9 +103,10 @@ static FileList *AllocMemory(char *filepath, FileList *next_node_address)
 
 		
 		// Clear out the malloced memory and store the (filepath) and (address of next node) in it
+		// Be carefull while allocating space for node->name (an off-by-one bug can cause mindfucks)
 		memmove(node, "0", sizeof(FileList));
 		
-		node->name = (char *) calloc(strlen(filepath), 1);	
+		node->name = (char *) calloc( strlen(filepath) + 1, 1);	
 		strncpy(node->name, filepath, strlen(filepath));
 
 		node->next = next_node_address;

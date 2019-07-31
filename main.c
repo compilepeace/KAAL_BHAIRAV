@@ -61,7 +61,7 @@ int main(int argc, char *argv[])
 	// file attributes under the path provided by user (as a command line arg)
 	DirEntriesParse(path);
 
-//	PrintLinkedList(head);
+	//PrintLinkedList(head);
 
 	Destroy(head);
 
