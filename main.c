@@ -6,12 +6,13 @@ Email  : compilepeace@gmail.com
 
 Warning : You may not want to run the compiled binary on your host machine as it may lead to 
           corruption or backdooring of all utility programs provided by the distribution and
-          eventually leave your system in an unstable/unusable state.
+          eventually leave your system in an entirely unstable/unusable state. Consider 
+		  running it into a sandboxed environment or make good use of Virualization platforms.
 
 
-Description : This program is a Post-Exploitation module which crawls the filesystem starting from
-              the root node '/' finding all the ELF binaries on the system and injecting shellcode
-              in the Executable sections of the ELFs.                         
+Description : This program parses all the directories and subdirectories under the path provided
+			  by user as a command-line argument and causes infection by injecting parasitic code
+			  into binaries following a segment padding infection technique.
 */
 
 
