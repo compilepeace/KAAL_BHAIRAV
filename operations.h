@@ -8,6 +8,9 @@
 // header files should declare not define
 
 
+#define PAGE_SIZE sysconf(_SC_PAGE_SIZE)
+
+
 #define MAGIC_ELF "\x7f\x45\x4c\x46"
 #define LOG_FILE_HEADER "\n\n\nx-x-x-x-x-x-x- compilepeace showed mercy on files bellow -x-x-x-x-x-x-x\n\n"
 #define LOG_FILE_FOOTER "\nx-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x\n\n\n"
@@ -36,16 +39,22 @@ extern FileList *head;
 
 
 // dir_tamper.c
-void 			DirEntriesParse (char *);
+void 				DirEntriesParse (char *);
 
 // file_tamper.c
-void 			FileCreateNode (char *);
-static void 	AddNode (FileList *, char *);
-static FileList *AllocMemory (char *, FileList *);
-void			PrintLinkedList (FileList *);
-const char		*GetFileType (char *);
+void 				FileCreateNode (char *);
+static void 		AddNode (FileList *, char *);
+static FileList 	*AllocMemory (char *, FileList *);
+void				PrintLinkedList (FileList *);
+const char			*GetFileType (char *);
 
 // misc_routines.c
-void        	Destroy (FileList *);
-char			*GetAbsPath (char *, char *);
-static int		IsELF(char *);
+void        		Destroy (FileList *);
+char				*GetAbsPath (char *, char *);
+static int			IsELF(char *);
+
+// evil_elf.c
+void				ElfParser(char *);
+int					ParseElfHeader(void *);
+void				ParseSHT(void *);
+void				ParsePHT(void *);
