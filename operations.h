@@ -58,7 +58,7 @@ static int			IsELF(char *);
 // evil_elf.c
 void				ElfParser(char *);
 int					ParseElfHeader(void *);
-void				ParseSHT(void *, char *, Elf64_Off *, uint64_t *);
-void				ParsePHT(void *);
+void				ModifySHT(void *);
+void				ModifyPHT(void *);
 static void			ModifyMappedMemory(void *);
 static void			InjectParasiteCode(void *, Elf64_Off );
