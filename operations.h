@@ -57,7 +57,12 @@ static int			IsELF(char *);
 
 // evil_elf.c
 void				ElfParser(char *);
-void				mmap_file(char *);
+void				FindAndReplace(uint8_t *, long int , long int);
+void				PatchSHT(void *);
+Elf64_Off			GetPaddingSize(void *);
+void				LoadParasite();
+void				*mmapFile(char *);
+void				DumpMemory(void *, uint64_t );
 
 
 /*

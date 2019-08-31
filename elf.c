@@ -446,7 +446,7 @@ static void InjectParasiteCode( void *map_addr, Elf64_Off parasite_offset)
 	int8_t *parasite_code = (int8_t *)malloc(parasite_size);
 	if (parasite_code == NULL)
 	{
-		perror("evil_elf.c, InjectParasiteCode() : Out of memory\n");
+		fprintf(stderr, "[-] evil_elf.c, InjectParasiteCode() : Out of memory\n");
 		exit(0x61);
 	}
 
