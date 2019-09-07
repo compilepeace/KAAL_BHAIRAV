@@ -65,8 +65,10 @@ Finally running the binary with a \<infection_directory_pathname> as parameter.
 
 ![action](./pictures/2_in_action.png)
 ...
-![result](./pictures/3_in_action.png)
-
+![action](./pictures/3_in_action.png)
+Let's have a look @ infected binaries, I choose to run bash !
+![result](./pictures/4_result.png)
+The parasite code doesn't itself intend any kind malicious behaviour (just throws up a code with signature to all the binaries it infects as a proof of arbitrary code being executed before the intended behaviour of our beloved binary) but noone can stop anyone from modifying the parasite to inject any kind of poison pill which is relatively trivial. (imagination is the only limit of Arbitrary Code Execution)
 
 ##  AIM
 This project started out of curiosity so it doesn't encourage destruction (in any context) but is aimed at exploring the limits of system programming and developing a offensive approach towards systems and machines which may result into a better approach towards analysing and mitigating threat (albeit this is nowhere near to modern threat which leverages a lot more sophisticated and more reliable techniques of spreading infection, maintaining persistence, avoiding detection etc by obfuscation, encryption, polymorphism and what not). Therefore, no harm is intended by the project rather only learning is promoted.
