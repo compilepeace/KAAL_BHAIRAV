@@ -6,7 +6,7 @@ Halfway during my journey of implementing the virus code, I got to learn that th
 ## ALGORITHM
 Bellow is a bird's eye view of 2 algorithms that I implemented while writing kaal bhairav. Details on the algorithms can be found in [elf.c] (first approach) and [evil_elf.c] (second approach).
 <br><br>
-### FIRST APPROACH
+### FIRST APPROACH (Extending the CODE segment)
 
 1. Patch the e_shoff ( Section Header Table offset in ELF header) (increase by a PAGE_SIZE)
 
@@ -35,7 +35,7 @@ Bellow is a bird's eye view of 2 algorithms that I implemented while writing kaa
 8. Patch ELF Header's e_entry with parasite_address
 
 <br><br>
-### SECOND APPROACH
+### SECOND APPROACH (Finding the padding - demonstrated bellow)
 1. Load parasite from file into memory
 
 2. Find padding size between CODE segment and the NEXT segment after CODE segment. Increase its -
@@ -53,21 +53,23 @@ Bellow is a bird's eye view of 2 algorithms that I implemented while writing kaa
 
 
 ## BUILDING
-To build the binary, follow the bellow steps ^_~
+First clone the repository and move into the directory -
 
-![clone](./pictures/clone.png)
+![clone](./pictures/0_git_clone.png)
 
-Now, building the binary !
+Next, Build the binaries. I've made a testing environment (infected_army directory), albeit the whole File System is a playground.
 
-![build](./pictures/make.png)
+![build](./pictures/1_make.png)
 
-Finally running the binary with a \<pathname> as parameter.
+Finally running the binary with a \<infection_directory_pathname> as parameter.
 
-![execution](./pictures/execute.png)
+![action](./pictures/2_in_action.png)
+...
+![result](./pictures/3_in_action.png)
 
 
 ##  AIM
-This project started out of curiosity so it doesn't encourage destruction (in any context) but is aimed at exploring the limits of system programming and developing a offensive approach towards systems and machines which may result into a better approach towards analysing and mitigating threat (albeit this is nowhere near to modern threat which leverages a lot more sophisticated techniques of spreading infection, maintaining persistence etc by obfuscation, encryption, polymorphism and what not). Therefore, no harm is intended by the project rather only learning is promoted.
+This project started out of curiosity so it doesn't encourage destruction (in any context) but is aimed at exploring the limits of system programming and developing a offensive approach towards systems and machines which may result into a better approach towards analysing and mitigating threat (albeit this is nowhere near to modern threat which leverages a lot more sophisticated and more reliable techniques of spreading infection, maintaining persistence, avoiding detection etc by obfuscation, encryption, polymorphism and what not). Therefore, no harm is intended by the project rather only learning is promoted.
 
 
 **NOTE** - You wouldn't want to run the binary with root priveleges because any path you provide outside of your home directory may lead to corruption such that the system may end up being in an unstable state or may become entirely unsable. Also, righ now its not implemented to stop itself from corrupting its own directory so be careful with the path you provide as argument because if the path you provide is a parent or an ancestor just above Kaal bhairav, it may corrupt its own directory too !
