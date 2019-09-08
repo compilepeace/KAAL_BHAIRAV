@@ -1,16 +1,19 @@
 .PHONY: clean build
 
 
-all: signature.o harness
+all: exec_parasite.bin so_parasite.bin harness
 
 
-signature.o: signature.asm
-	nasm -f elf64 $< -o $@
+exec_parasite.bin: exec_parasite.asm
+	nasm -f bin $< -o $@
+
+so_parasite.bin: so_parasite.asm
+	nasm -f bin $< -o $@
 
 harness: harness.c
 	gcc -fno-stack-protector -z execstack $< -o $@
 
 
 clean:
-	rm signature.o harness
+	rm parasite_exec.bin parasite_so.bin harness
 

