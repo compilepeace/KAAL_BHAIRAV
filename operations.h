@@ -27,6 +27,7 @@ extern unsigned long int elf_count;
 extern char 			 *parasite_path_for_exec;
 extern char				 *parasite_path_for_so;
 extern unsigned int		 infected_count;
+extern int 				 INFECT_DIRS;
 
 
 typedef struct Node
