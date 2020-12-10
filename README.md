@@ -4,7 +4,9 @@ Kaal Bhairav is a **terribly fearful form** of **lord shiva** (**The Destroyer**
 Kaal Bhairav is based on technique similar to **Silvio Cesare's** segment padding trojan and infects both **EXECUTABLE(ET_EXEC)** and **SHARED OBJECT(ET_DYN)** binaries on *Linux file system*. There are few other infectors using *entry point modification* technique to infect binaries but they can no longer be used to stealthily infect binaries on modern linux distributions where almost all system utilities(*bash*, *cp*, *ls* to name a few) are compiled as shared objects (which uses offsets rather of absolute addresses).<br>
 
 Since this is the my first implementation to an ELF virus, the infector might be a bit buggy ;)
- 
+
+**NOTE** - If you have trouble understanding the virus theory or want to fill in some prerequisite required in understanding the source code you can refer to the article series on **[Malware Engineering]**.
+
 ##  AIM
 This project is aimed at exploring the darker side of system programming and developing a offensive approach towards systems and machines which may result into a better understanding and approach towards analysing and mitigating threat (albeit this is nowhere near to modern threat which leverages a lot more sophisticated and more reliable techniques of spreading infection, maintaining persistence, avoiding detection etc by obfuscation, encryption, polymorphism and what not). Therefore, it doesn't promote destruction (in any context) rather only learning is promoted.
 
@@ -107,6 +109,7 @@ Cheers x_x
 **NAME**  : Abhinav Thakur *(Mahakaal)* <br>
 **EMAIL** : compilepeace@gmail.com  
 
+[Malware Engineering]: https://medium.com/@compilepeace/malware-engineering-part-0x1-that-magical-elf-5be3556ecb2b
 [elf.c]: ./elf.c
 [evil_elf.c]: ./evil_elf.c
 [Unix Viruses Mailing List]: https://www.win.tue.nl/~aeb/linux/hh/virus/unix-viruses.txt
